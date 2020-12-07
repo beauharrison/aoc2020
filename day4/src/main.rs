@@ -1,4 +1,5 @@
 use std::fs;
+use regex::Regex;
 
 #[derive(Debug)]
 struct Passport {
@@ -32,7 +33,6 @@ fn parse_passports(input: String) -> Vec<Passport> {
     let mut next_value_set = Vec::<&str>::new();
 
     for line in input.lines() {
-        println!("line: '{}'", line);
         if line == "" {
             passports.push(parse_passport(&next_value_set));
             next_value_set.clear();
@@ -85,11 +85,14 @@ fn has_all_required_fields(passport: &Passport) -> bool {
 fn is_all_data_valid(passport: &Passport) -> bool {
     if !has_all_required_fields(passport) {
         false
-    } else {
-        let a = passport.birth_year.as_ref();
+    } else {        
         validate_year(passport.birth_year.as_ref().unwrap(), 1920, 2002) &&
-        validate_year(passport.issue_year.as_ref().unwrap(), 2010, 2020) &&
-        validate_year(passport.exp_year.as_ref().unwrap(), 2020, 2030) &&
+            validate_year(passport.issue_year.as_ref().unwrap(), 2010, 2020) &&
+            validate_year(passport.exp_year.as_ref().unwrap(), 2020, 2030) &&
+            validate_height(passport.height.as_ref().unwrap()) &&
+            validate_hair(passport.hair_colour.as_ref().unwrap()) &&
+            validate_eyes(passport.eye_colour.as_ref().unwrap()) &&
+            validate_pid(passport.passport_id.as_ref().unwrap())
     }
 }
 
@@ -97,15 +100,46 @@ fn validate_year(year_string: &String, min: i32, max: i32) -> bool {
     let parsed = year_string.parse::<i32>();
 
     if let Result::Ok(year) = parsed {
-        year >= min || year <= max
+        year >= min && year <= max
     } else {
         false
     }
 }
 
-fn validate_height(height_string: &String) {
-    height_string[]
-    match 
+fn validate_height(height: &String) -> bool {
+    let re = Regex::new(r"^([0-9]+)([a-z]+)$").unwrap();
+    let caps_option = re.captures(height);
+
+    if let Some(caps) = caps_option {
+        let value = caps.get(1).unwrap().as_str().parse::<i32>().unwrap();
+        let value_type = caps.get(2).unwrap().as_str();
+
+        return match value_type {
+            "in" => value >= 59 && value <= 76,
+            "cm" => value >= 150 && value <= 193,
+            _ => {
+                false
+            }
+        }    
+    }
+
+    false
+}
+
+fn validate_hair(hair: &String) -> bool {
+    let re = Regex::new(r"^#[a-f0-9]{6}$").unwrap();
+    re.is_match(hair)
+}
+
+fn validate_eyes(eyes: &String) -> bool {
+    match eyes.as_str() {
+       "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth" => true,
+       _ => false
+    }
+}
+
+fn validate_pid(pid: &String) -> bool {
+    pid.len() == 9 && pid.parse::<i32>().is_ok()
 }
 
 fn part_1(passports: &Vec<Passport>) {
@@ -117,7 +151,7 @@ fn part_1(passports: &Vec<Passport>) {
 fn part_2(passports: &Vec<Passport>) {
     let valid_count = passports.iter().filter(|p| is_all_data_valid(p)).count();
 
-    println!("Part 1 count: {}", valid_count);
+    println!("Part 2 count: {}", valid_count);
 }
 
 fn main() {
@@ -125,4 +159,5 @@ fn main() {
     let passports = parse_passports(input);
 
     part_1(&passports);
+    part_2(&passports);
 }
