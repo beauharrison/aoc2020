@@ -1,4 +1,4 @@
-use std::{collections::{HashSet, hash_map::RandomState}, fs};
+use std::{collections::HashSet, fs};
 use std::iter::FromIterator;
 
 fn part_1(input: &String) {
