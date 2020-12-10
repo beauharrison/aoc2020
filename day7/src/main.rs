@@ -41,8 +41,6 @@ fn parse_rules(input: String) -> HashMap<String, Rule> {
                     })
                     .collect::<Vec<_>>();
 
-                // println!("{}", can_contain_string);
-
                 Rule::new(outer_caps[1].to_string(), can_contain)
             })
         })
@@ -52,7 +50,7 @@ fn parse_rules(input: String) -> HashMap<String, Rule> {
         .collect::<HashMap<_, _>>()
 }
 
-fn rule_resolves_to_shiny_gold<'a>(rule: &'a Rule, rules: &'a HashMap<String, Rule>, known_to_resolve: &mut HashSet<&'a String>, depth: i32) -> bool {
+fn rule_resolves_to_shiny_gold<'a>(rule: &'a Rule, rules: &'a HashMap<String, Rule>, known_to_resolve: &mut HashSet<&'a String>) -> bool {
     if known_to_resolve.contains(&rule.bag_colour) {
         true
     } else if rule.can_contain_shiny_gold() {
@@ -60,8 +58,26 @@ fn rule_resolves_to_shiny_gold<'a>(rule: &'a Rule, rules: &'a HashMap<String, Ru
         true
     } else {
         rule.can_contain.iter().any(|cc| {
-            known_to_resolve.contains(&cc.0) || rules.contains_key(&cc.0) && rule_resolves_to_shiny_gold(&rules[&cc.0], rules, known_to_resolve, depth + 1)
+            known_to_resolve.contains(&cc.0) || rules.contains_key(&cc.0) && rule_resolves_to_shiny_gold(&rules[&cc.0], rules, known_to_resolve)
         })
+    }
+}
+
+fn rule_resolves_to_contribute<'a>(rule: &'a Rule, rules: &'a HashMap<String, Rule>, known_contribution: &mut HashMap<&'a String, i32>) -> i32 {
+    if let Some(contribution) = known_contribution.get(&rule.bag_colour) {
+        *contribution
+    } else {
+        let contribution = rule.can_contain.iter()
+            .map(|cc| {
+                let r = rules.get(&cc.0).unwrap();
+                let contribution = rule_resolves_to_contribute(r, rules, known_contribution);
+                cc.1 + contribution * cc.1
+            })
+            .sum();
+        
+        known_contribution.insert(&rule.bag_colour, contribution);
+
+        contribution
     }
 }
 
@@ -71,7 +87,7 @@ fn part_1(rules: &HashMap<String, Rule>) {
     let mut known_to_resolve = HashSet::<&String>::new();
 
     for rule in rules.values() {
-        if rule_resolves_to_shiny_gold(rule, rules, &mut known_to_resolve, 0) {
+        if rule_resolves_to_shiny_gold(rule, rules, &mut known_to_resolve) {
             count += 1;
         }
     }
@@ -80,25 +96,15 @@ fn part_1(rules: &HashMap<String, Rule>) {
 }
 
 fn part_2(rules: &HashMap<String, Rule>) {
-    let mut count = 0;
-    let mut to_check_queue = VecDeque::<&String>::new();
+    let mut known_contribution = HashMap::<&String, i32>::new();
 
-    let a = "shiny gold".to_string();
-    to_check_queue.push_back(&a);
+    let shiny_gold = "shiny gold".to_string();
+    let shiny_gold_rule = rules.get(&shiny_gold).unwrap();
+    
+    let total = rule_resolves_to_contribute(shiny_gold_rule, rules, &mut known_contribution);
 
-    while to_check_queue.len() > 0 {
-        let to_check_colour = to_check_queue.pop_front().unwrap();
-        
-        if let Some(check_rule) = rules.get(to_check_colour) {
-            for can_contain in check_rule.can_contain.iter() {
-                count += can_contain.1;
-                println!("adding {} for {}, parent {} (total: {})", can_contain.1, can_contain.0, check_rule.bag_colour, count);
-                to_check_queue.push_back(&can_contain.0);
-            }
-        }
-    }
 
-    println!("part 2 count: {}", count);
+    println!("part 2 count: {}", total);
 }
 
 fn main() {
