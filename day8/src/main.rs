@@ -1,9 +1,15 @@
-use std::{collections::HashSet, fs};
+use std::fs;
+use std::collections::{HashSet, VecDeque};
 
 enum OpCode {
     ACC(i32),
     JMP(i32),
     NOP(i32)
+}
+
+enum MachineState {
+    Acc: i32
+    Ptr: usize
 }
 
 fn parse_input(input: String) -> Vec<OpCode> {
@@ -24,8 +30,6 @@ fn parse_input(input: String) -> Vec<OpCode> {
         })
         .collect::<Vec<_>>()
 }
-
-
 
 fn part_1(instructions: &Vec<OpCode>) {
     let mut acc = 0;
@@ -62,9 +66,21 @@ fn part_1(instructions: &Vec<OpCode>) {
     println!("part 1 acc: {}", acc);
 }
 
+
+fn part_2(instructions: &Vec<OpCode>) {
+    let winning = HashSet::<usize>::new();
+
+    
+
+
+
+    println!("part 2 acc: {}", acc);
+}
+
 fn main() {
     let input = fs::read_to_string("..\\input\\day8.txt").expect("poop");
     let instructions = parse_input(input);
 
     part_1(&instructions);
+    part_2(&instructions);
 }
