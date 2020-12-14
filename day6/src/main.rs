@@ -4,9 +4,7 @@ use std::iter::FromIterator;
 fn part_1(input: &String) {
     let mut total_count = 0;
     let mut group_answers = HashSet::<char>::new();
-
-    let mut lines_iter = input.lines();
-    
+   
     for line in input.lines() {
         if line == "" {
             total_count += group_answers.len();
