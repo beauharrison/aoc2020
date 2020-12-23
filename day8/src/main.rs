@@ -1,5 +1,5 @@
 use std::fs;
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 
 #[derive(Clone)]
 enum OpCode {
